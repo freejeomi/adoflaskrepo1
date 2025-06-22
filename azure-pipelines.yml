@@ -22,7 +22,7 @@ variables:
   # Project root folder. Point to the folder containing manage.py file.
   projectRoot: $(System.DefaultWorkingDirectory)
 
-  pythonVersion: '3.11'
+  pythonVersion: '3.11' # will need this line when i run on microsoft hosted agent
 
 stages:
 - stage: Build
@@ -32,10 +32,10 @@ stages:
     pool:
       name: Default
     steps:
-    - task: UsePythonVersion@0
-      inputs:
-        versionSpec: '$(pythonVersion)'
-      displayName: 'Use Python $(pythonVersion)'
+#    - task: UsePythonVersion@0
+#      inputs:
+#        versionSpec: '$(pythonVersion)'
+#      displayName: 'Use Python $(pythonVersion)'
 
     - script: |
         python -m venv antenv
@@ -73,10 +73,10 @@ stages:
         deploy:
           steps:
 
-          - task: UsePythonVersion@0
-            inputs:
-              versionSpec: '$(pythonVersion)'
-            displayName: 'Use Python version'
+#          - task: UsePythonVersion@0
+#            inputs:
+#              versionSpec: '$(pythonVersion)'
+#            displayName: 'Use Python version'
 
           - task: AzureWebApp@1
             displayName: 'Deploy Azure Web App : azuredemo1'
