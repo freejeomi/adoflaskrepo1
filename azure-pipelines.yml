@@ -30,7 +30,7 @@ stages:
   jobs:
   - job: BuildJob
     pool:
-      name: Default
+      vmImage: 'ubuntu-latest'
     steps:
 #    - task: UsePythonVersion@0
 #      inputs:
