@@ -7,22 +7,14 @@ trigger:
 - master
 
 variables:
-  # Azure Resource Manager connection created during pipeline creation
-  azureServiceConnectionId: '1e0343c2-8f89-48ac-b842-0b23a75bdac1'
+  # using variable groups, variable names then need to be put in name value pair format
+  - group: azuredemo-variable-group1
+  -  name: azureServiceConnectionId
+     value: '1e0343c2-8f89-48ac-b842-0b23a75bdac1'
+  - name: pythonVersion
+    value: '3.11'
 
-  # Web app name
-  webAppName: 'azuredemo1'
 
-  # Agent VM image name
-  vmImageName: 'ubuntu-latest'
-
-  # Environment name
-  environmentName: 'azuredemo1'
-
-  # Project root folder. Point to the folder containing manage.py file.
-  projectRoot: $(System.DefaultWorkingDirectory)
-
-  pythonVersion: '3.11' # will need this line when i run on microsoft hosted agent
 
 stages:
 - stage: Build
