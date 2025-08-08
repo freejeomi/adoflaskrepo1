@@ -1,0 +1,55 @@
+# Python to Linux Web App on Azure
+# Build your Python project and deploy it to Azure as a Linux Web App.
+# Change python version to one thats appropriate for your application.
+# https://docs.microsoft.com/azure/devops/pipelines/languages/python
+
+trigger:
+- master
+
+variables:
+  # using variable groups, variable names then need to be put in name value pair format
+  - group: azuredemo-variable-group1
+  -  name: azureServiceConnectionId
+     value: '1e0343c2-8f89-48ac-b842-0b23a75bdac1'
+  - name: pythonVersion
+    value: '3.11'
+
+
+
+stages:
+- stage: Build
+  displayName: Build stage
+  jobs:
+  - job: BuildJob
+    pool:
+      name: Default
+    steps:
+      - template: my-template.yml
+
+
+- stage: Deploy
+  displayName: 'Deploy Web App'
+  dependsOn: Build
+  condition: succeeded()
+  jobs:
+  - deployment: DeploymentJob
+    pool:
+      vmImage: 'ubuntu-latest'
+    environment: $(environmentName)
+    strategy:
+      runOnce:
+        deploy:
+          steps:
+
+#          - task: UsePythonVersion@0
+#            inputs:
+#              versionSpec: '$(pythonVersion)'
+#            displayName: 'Use Python version'
+
+          - task: AzureWebApp@1
+            displayName: 'Deploy Azure Web App : azuredemo1'
+            inputs:
+              azureSubscription: $(azureServiceConnectionId)
+              appName: $(webAppName)
+              package: $(Pipeline.Workspace)/drop/$(Build.BuildId).zip
+

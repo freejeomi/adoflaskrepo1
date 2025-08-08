@@ -1,55 +1,88 @@
-# Python to Linux Web App on Azure
-# Build your Python project and deploy it to Azure as a Linux Web App.
-# Change python version to one thats appropriate for your application.
-# https://docs.microsoft.com/azure/devops/pipelines/languages/python
 
-trigger:
-- master
+  # Python to Linux Web App on Azure
+  # Build your Python project and deploy it to Azure as a Linux Web App.
+  # Change python version to one thats appropriate for your application.
+  # https://docs.microsoft.com/azure/devops/pipelines/languages/python
 
-variables:
-  # using variable groups, variable names then need to be put in name value pair format
-  - group: azuredemo-variable-group1
-  -  name: azureServiceConnectionId
-     value: '1e0343c2-8f89-48ac-b842-0b23a75bdac1'
-  - name: pythonVersion
-    value: '3.11'
+  trigger:
+    - master
 
+  variables:
+    # Azure Resource Manager connection created during pipeline creation
+    azureServiceConnectionId: '9c2b513e-8f66-4dfc-9e61-b27c1c6149fc'
 
+    # Web app name
+    webAppName: 'ijdemo1'
 
-stages:
-- stage: Build
-  displayName: Build stage
-  jobs:
-  - job: BuildJob
-    pool:
-      vmImage: 'ubuntu-latest'
-    steps:
-      - template: my-template.yml
+    # Agent VM image name
+    vmImageName: 'ubuntu-latest'
 
+    # Environment name
+    environmentName: 'azuredemo1'
 
-- stage: Deploy
-  displayName: 'Deploy Web App'
-  dependsOn: Build
-  condition: succeeded()
-  jobs:
-  - deployment: DeploymentJob
-    pool:
-      vmImage: 'ubuntu-latest'
-    environment: $(environmentName)
-    strategy:
-      runOnce:
-        deploy:
+    # Project root folder. Point to the folder containing manage.py file.
+    projectRoot: $(System.DefaultWorkingDirectory)
+
+    pythonVersion: '3.13' # will need this line when i run on microsoft hosted agent
+
+  stages:
+    - stage: Build
+      displayName: Build stage
+      jobs:
+        - job: BuildJob
+          pool:
+            name: Default
           steps:
+            #    - task: UsePythonVersion@0
+            #      inputs:
+            #        versionSpec: '$(pythonVersion)'
+            #      displayName: 'Use Python $(pythonVersion)'
 
-#          - task: UsePythonVersion@0
-#            inputs:
-#              versionSpec: '$(pythonVersion)'
-#            displayName: 'Use Python version'
+            # - script: |
+            #     python -m venv antenv
+            #     source antenv/bin/activate
+            #     python -m pip install --upgrade pip
+            #     pip install setup
+            #     pip install -r requirements.txt
+            #   workingDirectory: $(projectRoot)
+            #   displayName: "Install requirements"
 
-          - task: AzureWebApp@1
-            displayName: 'Deploy Azure Web App : azuredemo1'
-            inputs:
-              azureSubscription: $(azureServiceConnectionId)
-              appName: $(webAppName)
-              package: $(Pipeline.Workspace)/drop/$(Build.BuildId).zip
+            - task: ArchiveFiles@2
+              displayName: 'Archive files'
+              inputs:
+                rootFolderOrFile: '$(projectRoot)'
+                includeRootFolder: false
+                archiveType: zip
+                archiveFile: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+                replaceExistingArchive: true
+
+            - upload: $(Build.ArtifactStagingDirectory)/$(Build.BuildId).zip
+              displayName: 'Upload package'
+              artifact: drop
+
+    - stage: Deploy
+      displayName: 'Deploy Web App'
+      dependsOn: Build
+      condition: succeeded()
+      jobs:
+        - deployment: DeploymentJob
+          pool:
+            name: Default
+          environment: $(environmentName)
+          strategy:
+            runOnce:
+              deploy:
+                steps:
+
+                  #          - task: UsePythonVersion@0
+                  #            inputs:
+                  #              versionSpec: '$(pythonVersion)'
+                  #            displayName: 'Use Python version'
+
+                  - task: AzureWebApp@1
+                    displayName: 'Deploy Azure Web App : azuredemo1'
+                    inputs:
+                      azureSubscription: $(azureServiceConnectionId)
+                      appName: $(webAppName)
+                      package: $(Pipeline.Workspace)/drop/$(Build.BuildId).zip
 
