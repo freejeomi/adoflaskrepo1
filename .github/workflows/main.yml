@@ -1,0 +1,5 @@
+name: Build Python Flask Web App
+
+on:
+  push:
+    branches: ['master']
